@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pladur Pro · Presupuestos</title>
+<style>
+:root{
+  --azul:#add8c7; --azul-osc:#8fc4ae; --naranja:#253832; --salvia:#add8c7; --carbon:#253832; --gris-fondo:#f1f4f2;
+  --gris-borde:#dbe2ea; --texto:#1a2532; --texto-suave:#5b6b7c; --ok:#1e9e55; --rojo:#d94343;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--gris-fondo);color:var(--texto);font-size:15px}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--texto);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;width:100%;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--azul)}
+label{font-size:12px;font-weight:600;color:var(--texto-suave);display:block;margin:12px 0 5px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ===== Layout app ===== */
+#app{margin:0 auto;min-height:100vh;background:#fff;display:flex;flex-direction:column;width:100%}
+.cuerpo{flex:1;display:flex;flex-direction:column;min-width:0;width:100%}
+.cabecera{background:linear-gradient(135deg,var(--azul) 0%,var(--azul-osc) 100%);color:var(--carbon);padding:16px 18px 14px;position:sticky;top:0;z-index:50}
+.cabecera .fila{display:flex;align-items:center;justify-content:space-between}
+.cabecera h1{font-size:17px;font-weight:700;letter-spacing:.5px}
+.cabecera .sub{font-size:11px;opacity:.75;margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.logo-mini{width:34px;height:34px;border-radius:8px;background:#fff;color:#253832;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.contenido{flex:1;padding:16px 16px 92px;width:100%;max-width:760px;margin:0 auto}
+.pie-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--gris-borde);display:flex;z-index:60}
+.pie-nav button{flex:1;padding:9px 0 7px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--texto-suave);font-size:10px;font-weight:600}
+.pie-nav button svg{display:block}
+.pie-nav button.activo{color:#253832}
+.lateral{display:none}
+@media(min-width:960px){
+  #app{flex-direction:row}
+  .lateral{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:236px;background:#fff;border-right:1px solid var(--gris-borde);padding:26px 16px 20px;z-index:70}
+  .lateral-marca{display:flex;align-items:center;gap:11px;padding:0 8px;margin-bottom:26px}
+  .lateral-marca .lm1{font-weight:800;font-size:15px;letter-spacing:.4px;line-height:1.2;color:var(--carbon)}
+  .lateral-marca .lm2{font-size:10.5px;color:var(--texto-suave);margin-top:1px}
+  .lateral-nav{display:flex;flex-direction:column;gap:4px}
+  .lateral-nav button{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;color:var(--texto-suave);font-weight:600;font-size:14px;text-align:left;width:100%}
+  .lateral-nav button:hover{background:#f6f4f2;color:var(--texto)}
+  .lateral-nav button.activo{background:#eaf3ee;color:#253832}
+  .lateral-nota{margin-top:auto;font-size:10px;color:var(--texto-suave);line-height:1.5;padding:0 8px}
+  .cuerpo{margin-left:236px;width:calc(100% - 236px)}
+  .cabecera{display:none}
+  .pie-nav{display:none}
+  .contenido{max-width:860px;padding:34px 40px 70px}
+  .grid-inicio{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .grid-inicio .full{grid-column:1/-1}
+  .editor-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:24px;align-items:start}
+  .editor-fija{position:sticky;top:24px}
+}
+@media(hover:hover){.lista-item{transition:border-color .15s,background .15s}.lista-item:hover{border-color:#bfd8c9;background:#fafcfa}}
+.boton{display:flex;align-items:center;justify-content:center;gap:8px}
+.boton.mini{display:inline-flex}
+
+/* ===== Componentes ===== */
+.tarjeta{background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:14px;margin-bottom:12px}
+.tarjeta h3{font-size:15px;margin-bottom:4px}
+.suave{color:var(--texto-suave);font-size:12.5px}
+.fila-entre{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.boton{background:var(--azul);color:var(--carbon);border-radius:10px;padding:13px 16px;font-weight:700;font-size:15px;width:100%;text-align:center}
+.boton:active{opacity:.85}
+.boton.naranja{background:var(--naranja);color:#fff}
+.boton.sec{background:#eaf3ee;color:#253832;border:1px solid #c9ddd1}
+.boton.rojo{background:#fdecec;color:var(--rojo);border:1px solid #f5c6c6}
+.boton.mini{width:auto;padding:7px 12px;font-size:13px;border-radius:8px}
+.boton:disabled{opacity:.45;cursor:default}
+.chip{display:inline-block;background:#eaf3ee;color:#253832;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700}
+.chip.gris{background:#eef1f4;color:var(--texto-suave)}
+.lista-item{background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:13px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lista-item:active{background:#f7fafd}
+.lista-item .nombre{font-weight:600;font-size:14.5px;line-height:1.3}
+.lista-item .det{color:var(--texto-suave);font-size:12px;margin-top:3px}
+.lista-item .imp{font-weight:700;font-size:14.5px;white-space:nowrap;text-align:right}
+.vacio{text-align:center;padding:40px 20px;color:var(--texto-suave)}
+.vacio .ico{margin-bottom:10px;color:#9fb0a6}.vacio .ico svg{display:block;margin:0 auto}
+.badge{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px}
+.badge.borrador{background:#fff4e0;color:#b26d00}
+.badge.enviado{background:#e2f4e9;color:var(--ok)}
+.buscador{margin-bottom:12px}
+
+/* ===== Editor presupuesto ===== */
+.bloque-cap{margin-bottom:14px}
+.cap-cab{background:#eaf3ee;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.cap-cab .tit{font-weight:700;font-size:13.5px;color:#253832;text-transform:uppercase;letter-spacing:.5px}
+.partida{padding:10px 4px;border-bottom:1px solid #eef1f4}
+.partida:last-child{border-bottom:none}
+.partida .nombre{font-size:13.5px;font-weight:600;line-height:1.35}
+.partida .med{color:var(--texto-suave);font-size:12px;margin-top:2px}
+.partida .imp{font-weight:700;white-space:nowrap}
+.totales{background:#f7fafc;border:1px solid var(--gris-borde);border-radius:12px;padding:14px;margin:16px 0}
+.totales .fila{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+.totales .total{border-top:2px solid var(--texto);margin-top:8px;padding-top:10px;font-size:17px;font-weight:800}
+.resumen-material{background:#f0f7f2;border:1px solid #cfe3d6;border-radius:12px;padding:14px;margin-top:16px}
+.resumen-material h4{font-size:13px;color:#253832;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.resumen-material .fila>span:first-child{display:flex;align-items:center;gap:6px}
+.resumen-material .fila{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.acciones-fila{display:flex;gap:8px;margin-top:14px}
+.acciones-fila .boton{flex:1;padding:11px;font-size:14px}
+
+/* ===== Modal ===== */
+.modal-fondo{position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:600px){.modal-fondo{align-items:center}}
+.modal{background:#fff;width:100%;max-width:560px;border-radius:16px 16px 0 0;max-height:92vh;overflow-y:auto;padding:18px}
+@media(min-width:600px){.modal{border-radius:16px}}
+.modal h2{font-size:16px;margin-bottom:4px}
+.modal-cerrar{font-size:22px;color:var(--texto-suave);padding:4px 8px}
+.zona-precio{background:#eaf3ee;border-radius:10px;padding:12px;margin-top:10px}
+.zona-precio .fila{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0}
+.zona-precio .imp{font-size:19px;font-weight:800;color:var(--azul-osc)}
+.grupo-mat{margin-top:6px}
+.grupo-mat .fila{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;border-bottom:1px dashed #e3e9f0}
+.grupo-mat .fila:last-child{border-bottom:none}
+
+/* ===== PDF (estilo Metro Cuadrado) ===== */
+#vista-pdf{display:none}
+@media print{
+  body{background:#fff}
+  #app{display:none !important}
+  #vista-pdf{display:block !important}
+  .pagina-pdf{page-break-after:always;margin:0;box-shadow:none;zoom:1 !important}
+  @page{size:A4;margin:0}
+}
+.pagina-pdf{width:210mm;min-height:297mm;margin:28px auto;background:#fff;padding:14mm 16mm;font-size:10.5px;color:#111;box-shadow:0 6px 32px rgba(0,0,0,.16)}
+.pdf-cab{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.pdf-titulo-doc{font-size:24px;font-weight:800;color:#111;letter-spacing:-.3px}
+.pdf-numfecha{margin-top:14px;font-size:10px;color:#222}
+.pdf-numfecha table{border-collapse:collapse}
+.pdf-numfecha td{padding:2px 18px 2px 0;vertical-align:top}
+.pdf-numfecha td:first-child{font-weight:700}
+.pdf-marca{text-align:right}
+.pdf-marca .casa{display:inline-block;vertical-align:middle;margin-right:9px}
+.pdf-marca .nombre{display:inline-block;vertical-align:middle;text-align:left}
+.pdf-marca .l1{font-size:16px;font-weight:800;color:#253832;line-height:1.1;letter-spacing:.6px}
+.pdf-marca .l2{font-size:7.5px;color:#8a7d79;letter-spacing:2.2px;margin-top:3px;line-height:1.4}
+.pdf-doscol{display:flex;justify-content:space-between;font-size:10px;line-height:1.65;margin-bottom:22px}
+.pdf-doscol b{color:#111}
+table.pdf-tabla{width:100%;border-collapse:collapse;font-size:10px}
+table.pdf-tabla th{color:#444;padding:6px 7px;text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #999;font-weight:600}
+table.pdf-tabla th.num,table.pdf-tabla td.num{text-align:right}
+table.pdf-tabla td{padding:7px 7px;border-bottom:1px solid #e2e2e2;vertical-align:top}
+tr.capitulo td{font-weight:800;font-size:11px;border-bottom:1px solid #555;padding-top:11px}
+tr.ultimo td{border-bottom:1px solid #999}
+.pdf-tot{margin-top:16px;width:100%}
+.pdf-tot table{margin-left:auto;border-collapse:collapse;font-size:10.5px}
+.pdf-tot td{padding:5px 10px}
+.pdf-tot td.et{color:#333;text-align:right}
+.pdf-tot td.vl{font-weight:700;text-align:right;min-width:110px}
+.pdf-tot tr.final td{font-size:12.5px;font-weight:800;padding-top:10px}
+.pdf-obs{margin-top:22px;font-size:8.6px;line-height:1.55;color:#222;text-align:justify}
+.pdf-obs h4,.pdf-pago h4{font-size:10px;color:#111;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.pdf-pago{margin-top:14px;font-size:9px;color:#222;line-height:1.5}
+.pdf-pie{margin-top:24px;border-top:1px solid #bbb;padding-top:8px;display:flex;justify-content:space-between;font-size:8.5px;color:#777}
+.aviso-demo{background:#fff4e0;border:1px solid #f0d9a8;border-radius:8px;padding:8px 12px;font-size:11px;color:#8a6d1a;margin-bottom:12px}
+
+/* ===== Franja demo Lumicatech ===== */
+.franja-demo{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid #f0d98a;color:#6b5200;font-size:12px;line-height:1.4;text-align:center}
+.franja-demo b{background:#f5b800;color:#3d2e00;border-radius:4px;padding:1px 7px;font-size:11px;letter-spacing:.6px}
+.franja-demo .por{display:inline-flex;align-items:center;gap:6px;color:#5b6b7c;white-space:nowrap}
+.franja-demo img{height:14px;width:auto;display:block}
+@media print{.franja-demo{display:none !important}}
+</style>
+</head>
+<body>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside class="lateral">
+    <div class="lateral-marca">
+      <svg width="36" height="31" viewBox="0 0 44 38"><path d="M22 1 L43 19 H35.5 V37 H26 V24 H18 V37 H8.5 V19 H1 Z" fill="#ADD8C7"/></svg>
+      <div><div class="lm1">PLADUR PRO</div><div class="lm2">Metro Cuadrado</div></div>
+    </div>
+    <nav class="lateral-nav">
+      <button data-nav="inicio" class="activo" onclick="nav('inicio')"><span data-ico="inicio"></span>Inicio</button>
+      <button data-nav="presupuestos" onclick="nav('presupuestos')"><span data-ico="presu"></span>Presupuestos</button>
+      <button data-nav="catalogo" onclick="nav('catalogo')"><span data-ico="catalogo"></span>Catálogo</button>
+      <button data-nav="clientes" onclick="nav('clientes')"><span data-ico="clientes"></span>Clientes</button>
+      <button data-nav="ajustes" onclick="nav('ajustes')"><span data-ico="ajustes"></span>Ajustes</button>
+    </nav>
+    <div class="lateral-nota">Metro Cuadrado Diseño y Construcción 2025 SL<br>Vila-Real, Castellón</div>
+  </aside>
+  <div class="cuerpo">
+    <div class="franja-demo">
+      <span><b>DEMO</b> Versión de prueba · no es la aplicación definitiva</span>
+      <span class="por">Desarrollado por <img src="assets/logo-lumicatech.png" alt="Lumicatech"></span>
+    </div>
+    <div class="cabecera">
+      <div class="fila">
+        <div>
+          <h1>PLADUR PRO</h1>
+          <div class="sub" id="cab-sub">Presupuestos · Metro Cuadrado</div>
+        </div>
+        <svg width="36" height="32" viewBox="0 0 44 38" style="background:#fff;border-radius:8px;padding:5px 4px"><path d="M22 1 L43 19 H35.5 V37 H26 V24 H18 V37 H8.5 V19 H1 Z" fill="#ADD8C7"/></svg>
+      </div>
+    </div>
+    <div class="contenido" id="contenido"></div>
+    <div class="pie-nav">
+      <button data-nav="inicio" class="activo" onclick="nav('inicio')"><span data-ico="inicio" data-sz="20"></span>Inicio</button>
+      <button data-nav="presupuestos" onclick="nav('presupuestos')"><span data-ico="presu" data-sz="20"></span>Presup.</button>
+      <button data-nav="catalogo" onclick="nav('catalogo')"><span data-ico="catalogo" data-sz="20"></span>Catálogo</button>
+      <button data-nav="clientes" onclick="nav('clientes')"><span data-ico="clientes" data-sz="20"></span>Clientes</button>
+      <button data-nav="ajustes" onclick="nav('ajustes')"><span data-ico="ajustes" data-sz="20"></span>Ajustes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PDF ================= -->
+<div id="vista-pdf"></div>
+
+<!-- ================= MODAL ================= -->
+<div id="modal-fondo" class="modal-fondo" style="display:none" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal" id="modal-cont"></div>
+</div>
+
+<script>
+/* =========================================================
+   PLADUR PRO — demo single-file
+   Datos en localStorage · clave: pladurpro_v1
+   ========================================================= */
+const K='pladurpro_v1';
+
+/* --- Plantilla de observaciones (extraída del ejemplo E26032) --- */
+const OBS_PLANTILLA=`Métodos de pago. Anticipo del material de cada fase antes de pedirlo (el importe del pedido de material según factura del proveedor), el resto a certificación cada 15 días. Pago a 7 días de la certificación, el retraso de más de 10 días en un pago facultará a Metro Cuadrado a paralizar los trabajos sin penalización.
+Este presupuesto no incluye ningún trabajo de albañilería, como falcado de cajas, apertura de registros, forrado de pilares/vigas, juntas de dilatación, oscuros perimetrales, etc. Estos precios son para trasdosados y tabiques rectos, en caso de tener que ejecutar superficies curvas, se presupuestarán y cobrarán por separado. Son por cuenta del cliente: suministro de agua y energía eléctrica, replanteo, así como el montaje de andamios necesarios, maquinaria de elevación y las medidas de seguridad colectivas adecuadas. No está incluida la retirada de escombros al vertedero. Los trabajos que se realicen y no estén indicados en el presupuesto se facturarán por separado. El nivel de acabado será Q2, excepto en paredes para alicatar, donde será Q1. El coste de los medios de elevación a planta del material: no se aplicará un cargo extra si el camión autoportante que lleva el material alcanza para descargar en la zona de trabajo; en caso contrario, se valorará el coste de subida y acarreo de este material como una partida alzada aparte de la valoración de los precios unitarios. Se cobrarán 25€ por hora de cada operario, en trabajos por administración. Incluye medios de elevación hasta 3 metros. Los precios presupuestados son para una altura máxima de 4 metros. Los precios podrían variar, al no disponer de documentación gráfica, y no haber visitado la obra. Los remates o trabajos que queden pendientes por causas ajenas a Metro Cuadrado Diseño y Construcción 2025 SL, se valorarán y facturarán aparte, por horas de administración y material empleado, no teniendo en cuenta los precios unitarios de los sistemas de este presupuesto. No está incluido en los precios el recibido de premarcos de aluminio, que se valorará según las dimensiones de las puertas o ventanales. Los trasdosados incluyen dos patas de anclaje por cada montante en caso de ser necesarias. La forma de pago será por TRANSFERENCIA. El plazo de validez de la presente oferta es de 30 días y el inicio de los trabajos se acordará entre ambas partes. LOS PRECIOS SERÁN ACTUALIZADOS EN CASO DE ACEPTACIÓN, SEGÚN LAS TARIFAS VIGENTES EN LA FECHA DE INICIO DE LOS TRABAJOS. Criterio de medición según UNE 92305:2020. Huecos menores a 5 m² no se deducirán. Se deducirá el 50% del hueco mayor o igual a 5 m² e inferior o igual a 8 m², si el hueco es mayor a 8 m², se deducirá todo el hueco. Metro lineal = metro cuadrado. Al final de la obra se medirá a cinta corrida. Si el precio de la materia prima se incrementa, al cliente se le cobrará la diferencia.`;
+
+/* --- Empresa --- */
+const EMPRESA_DEF={
+  nombre:'Metro Cuadrado Diseño y Construcción 2025 SL',
+  direccion:'Calle Ejemplo 1',
+  poblacion:'Vila-Real (12000), Castellón, España',
+  cif:'B00000000', tel:'600000000', email:'info@ejemplo.com',
+  iban:'ES00 0000 0000 0000 0000 0000',
+  beneficiario:'Metro Cuadrado Diseño y Construcción 2025, S.L.',
+  iva:0
+};
+
+/* --- Catálogo con recetas (consumos estándar sector, editables) ---
+   receta: [material, cantidad por m²/ml/ud] · horas por unidad de venta */
+const CATALOGO_DEF=[
+ {id:'t1',cap:'Trasdosados',nombre:'Trasdosado de pladur 70+15N c/600 con aislamiento lana mineral 60 mm',ud:'m²',precio:34.95,horas:0.6,receta:[['Placa yeso 15N','1.15'],['Placa yeso 13 A','1.15'],['Perfil estructural 70 (ml)','1.35'],['Perfil T-24 15N (ml)','1.35'],['Lana mineral 60 mm','1.05'],['Tornillería (uds)','28'],['Pasta y cinta (kg)','0.45'],['Patas anclaje (uds)','2']]},
+ {id:'t2',cap:'Trasdosados',nombre:'Trasdosado de pladur 48+15N c/600 con aislamiento lana mineral 40 mm',ud:'m²',precio:33.46,horas:0.55,receta:[['Placa yeso 15N','1.15'],['Placa yeso 13 A','1.15'],['Perfil estructural 48 (ml)','1.35'],['Perfil T-24 15N (ml)','1.35'],['Lana mineral 40 mm','1.05'],['Tornillería (uds)','28'],['Pasta y cinta (kg)','0.45'],['Patas anclaje (uds)','2']]},
+ {id:'t3',cap:'Trasdosados',nombre:'Suplemento placa hidrófuga trasdosados',ud:'m²',precio:2.66,horas:0.08,receta:[['Placa hidrófuga H1','1.15'],['Tornillería (uds)','14'],['Pasta y cinta (kg)','0.15']]},
+ {id:'b1',cap:'Tabiques',nombre:'Tabique de pladur 15N+70+15N c/600 mm con aislamiento lana mineral 60 mm',ud:'m²',precio:40.46,horas:0.55,receta:[['Placa yeso 15N','2.3'],['Perfil estructural 70 (ml)','2.7'],['Lana mineral 60 mm','1.05'],['Tornillería (uds)','34'],['Pasta y cinta (kg)','0.55'],['Ranuras/juntas perfil (ml)','0.5']]},
+ {id:'b2',cap:'Tabiques',nombre:'Suplemento placa hidrófuga tabiques',ud:'m²',precio:2.66,horas:0.08,receta:[['Placa hidrófuga H1','1.15'],['Tornillería (uds)','14'],['Pasta y cinta (kg)','0.15']]},
+ {id:'f1',cap:'Techos',nombre:'Falso techo continuo de pladur. Descuelgue 20/25 cm',ud:'m²',precio:31.92,horas:0.6,receta:[['Placa yeso 13 A','1.15'],['Perfil T-24 (ml)','1.3'],['Perfil L perimetral (ml)','0.35'],['Colgado/ descuelgue (uds)','3.5'],['Tornillería (uds)','30'],['Pasta y cinta (kg)','0.5']]},
+ {id:'f2',cap:'Techos',nombre:'Falso techo continuo de pladur adosado al techo. Descuelgue 5 cm',ud:'m²',precio:31.92,horas:0.55,receta:[['Placa yeso 13 A','1.15'],['Perfil T-24 (ml)','1.3'],['Perfil L perimetral (ml)','0.35'],['Colgado/ descuelgue (uds)','3.5'],['Tornillería (uds)','30'],['Pasta y cinta (kg)','0.5']]},
+ {id:'f3',cap:'Techos',nombre:'Falso techo continuo de pladur. Descuelgue 100 cm.',ud:'m²',precio:31.92,horas:0.7,receta:[['Placa yeso 13 A','1.15'],['Perfil T-24 (ml)','1.3'],['Perfil L perimetral (ml)','0.35'],['Colgado/ descuelgue (uds)','3.5'],['Bara/ perfil estructural (ml)','1.2'],['Tornillería (uds)','30'],['Pasta y cinta (kg)','0.5']]},
+ {id:'f4',cap:'Techos',nombre:'Suplemento placa hidrófuga techos',ud:'m²',precio:2.66,horas:0.08,receta:[['Placa hidrófuga H1','1.15'],['Tornillería (uds)','14'],['Pasta y cinta (kg)','0.15']]},
+ {id:'f5',cap:'Techos',nombre:'Tabica de pladur',ud:'ml',precio:31.92,horas:0.6,receta:[['Placa yeso 13 A','0.55'],['Perfil L tabica (ml)','1.1'],['Tornillería (uds)','12'],['Pasta y cinta (kg)','0.3']]},
+ {id:'f6',cap:'Techos',nombre:'Falso techo desmontable 60x60 perfilería vista y placa vinílica',ud:'m²',precio:30.22,horas:0.5,receta:[['Placa vinílica 60x60 (uds)','2.78'],['Perfilería T-24 vista (ml)','1.7'],['Colgado/ descuelgue (uds)','2.5'],['Tornillería (uds)','15']]},
+ {id:'f7',cap:'Techos',nombre:'Falso techo continuo 13 glasrock +75 thr y thm cada 600',ud:'m²',precio:64.85,horas:0.8,receta:[['Placa Glasrock 13','1.15'],['Placa THR/THM 13','1.15'],['Perfil T-24 (ml)','1.3'],['Perfil L perimetral (ml)','0.35'],['Colgado/ descuelgue (uds)','3.5'],['Tornillería (uds)','32'],['Pasta y cinta (kg)','0.55']]},
+ {id:'f8',cap:'Techos',nombre:'Tabica de glasrock 13 glasrock +75 thr y thm cada 600',ud:'ml',precio:64.85,horas:0.8,receta:[['Placa Glasrock 13','0.55'],['Placa THR/THM 13','0.55'],['Perfil L tabica (ml)','1.1'],['Tornillería (uds)','14'],['Pasta y cinta (kg)','0.35']]},
+ {id:'f9',cap:'Techos',nombre:'Falso techo de lamas metálicas de aluminio lacadas Lama estándar de 85-100 mm o 200 mm (tipo Venezia), blanco, zona sin complicaciones))',ud:'m²',precio:66.02,horas:0.7,receta:[['Lamas aluminio 85 mm (ml)','4.5'],['Perfilería portante (ml)','1.2'],['Colgado/ descuelgue (uds)','3'],['Tornillería y clips (uds)','25']]},
+ {id:'a1',cap:'Adicionales',nombre:'Trampilla registro acceso estandard 600x600 en techo continuo de 13mm',ud:'ud',precio:70,horas:0.4,receta:[['Trampilla registro 600x600 (uds)','1'],['Tornillería (uds)','10']]},
+ {id:'a2',cap:'Adicionales',nombre:'Refuerzo de maderas para cargas de paredes de 590x145mm',ud:'ud',precio:19,horas:0.3,receta:[['Madera reforz. 590x145 (uds)','1'],['Tornillería (uds)','8']]},
+ {id:'a3',cap:'Adicionales',nombre:'Refuerzo metalico de 120x25 cm para colgar muebles o sanitarios',ud:'ud',precio:13,horas:0.3,receta:[['Perfil refuerzo 120x25 (uds)','1'],['Tornillería (uds)','8']]}
+];
+
+const CAPITULOS_DEF=['Trasdosados','Tabiques','Techos','Adicionales'];
+
+/* =========================================================
+   Estado
+   ========================================================= */
+let db;
+function cargar(){
+  const raw=localStorage.getItem(K);
+  if(raw){try{db=JSON.parse(raw)}catch(e){db=null}}
+  if(!db||!db.version){
+    db={version:1,seq:33,empresa:{...EMPRESA_DEF},catalogo:JSON.parse(JSON.stringify(CATALOGO_DEF)),
+        clientes:[{id:'c1',nombre:'Metro Cuadrado Diseño y Construcción 2025 SL',cif:'B00000000',direccion:'Calle Ejemplo 1',poblacion:'Vila-Real (12000), Castellón',tel:'600000000',email:'info@ejemplo.com'}],
+        presupuestos:[],obsPlantilla:OBS_PLANTILLA,capitulos:[...CAPITULOS_DEF]};
+    guardar();
+  }
+}
+function guardar(){localStorage.setItem(K,JSON.stringify(db))}
+const eur=n=>n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const num=n=>n.toLocaleString('es-ES',{maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICONOS={
+ inicio:'<path d="M3 10.7 12 3.5l9 7.2"/><path d="M5.5 9.8V20.5h4.6v-5.4h3.8v5.4h4.6V9.8"/>',
+ presu:'<path d="M14.5 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-11z"/><path d="M14.5 2.5v6h5"/><path d="M8.5 13.5h7M8.5 17h4.5"/>',
+ catalogo:'<path d="M4 19A2.5 2.5 0 0 1 6.5 16.5H20v-14H6.5A2.5 2.5 0 0 0 4 5z"/><path d="M4 19A2.5 2.5 0 0 0 6.5 21.5H20v-5"/>',
+ clientes:'<circle cx="9.5" cy="8" r="3.5"/><path d="M3.5 20c.5-3.4 2.9-5.5 6-5.5s5.5 2.1 6 5.5"/><path d="M15.5 4.9a3.5 3.5 0 0 1 0 6.2M17.5 14.9c1.8.8 3 2.4 3.3 5.1"/>',
+ ajustes:'<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9.5" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="7.5" cy="17" r="2.2" fill="currentColor" stroke="none"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ print:'<path d="M6.5 8V3.5h11V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="1.5"/><path d="M6.5 13.5h11v7h-11z"/>',
+ copy:'<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M5.5 15.5h-1a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+ check:'<path d="M4.5 12.8 9.7 18 19.5 6.5"/>',
+ trash:'<path d="M4 6.5h16M9.5 6.5V4a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 4v2.5M6.5 6.5l1 13.5h9l1-13.5M10 10.5v6M14 10.5v6"/>',
+ edit:'<path d="M16.8 3.8a2.1 2.1 0 0 1 3 3L8.5 18.2 4 19.5l1.3-4.5z"/>',
+ back:'<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+ reloj:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/>',
+ equipo:'<circle cx="8.5" cy="8.5" r="3"/><path d="M2.5 19.5c.5-3 2.6-5 6-5s5.5 2 6 5"/><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17 14.9c2.3.7 3.9 2.3 4.3 4.6"/>',
+ mat:'<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'
+};
+function ico(n,sz=20){return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONOS[n]||''}</svg>`}
+function pintaIconos(){document.querySelectorAll('[data-ico]').forEach(e=>{e.outerHTML=ico(e.dataset.ico,e.dataset.sz?+e.dataset.sz:22)})}
+
+/* totales de un presupuesto */
+function totales(p){
+  let base=0;
+  for(const c of p.capitulos){c.importe=0;for(const it of c.items){it.importe=it.precio*it.cantidad;c.importe+=it.importe}base+=c.importe}
+  const iva=base*(p.iva??db.empresa.iva)/100;
+  return{base,iva,total:base+iva};
+}
+/* materiales + horas agregados del presupuesto */
+function materiales(p){
+  const mat={},cat=Object.fromEntries(db.catalogo.map(x=>[x.id,x]));
+  let horas=0;
+  for(const c of p.capitulos)for(const it of c.items){
+    const r=cat[it.catId];if(!r)continue;
+    horas+=r.horas*it.cantidad;
+    for(const[m,q]of r.receta)mat[m]=(mat[m]||0)+q*it.cantidad;
+  }
+  const dias=Math.ceil(horas/8/3); /* equipo estimado 3 operarios */
+  return{mat,horas,dias};
+}
+
+/* =========================================================
+   Navegación
+   ========================================================= */
+let vista='inicio',editarId=null,presuAbierto=null;
+function nav(v){vista=v;render()}
+
+function render(){
+  document.querySelectorAll('.pie-nav button,.lateral-nav button').forEach(b=>b.classList.toggle('activo',b.dataset.nav===vista||(vista==='editar'&&b.dataset.nav==='presupuestos')));
+  const c=document.getElementById('contenido');
+  if(vista==='inicio')c.innerHTML=vInicio();
+  else if(vista==='presupuestos')c.innerHTML=vPresupuestos();
+  else if(vista==='catalogo')c.innerHTML=vCatalogo();
+  else if(vista==='clientes')c.innerHTML=vClientes();
+  else if(vista==='ajustes')c.innerHTML=vAjustes();
+  else if(vista==='editar')c.innerHTML=vEditor();
+  window.scrollTo(0,0);
+}
+
+/* =========================================================
+   VISTAS
+   ========================================================= */
+function vInicio(){
+  const pend=db.presupuestos.filter(p=>p.estado==='borrador');
+  const totalAño=db.presupuestos.filter(p=>p.estado==='enviado').reduce((s,p)=>s+totales(p).total,0);
+  return `
+  <div class="tarjeta" style="background:linear-gradient(135deg,var(--azul) 0%,var(--azul-osc) 100%);color:var(--carbon);border:none">
+    <div class="suave" style="color:#41604f">Resumen</div>
+    <div style="font-size:26px;font-weight:800;margin:4px 0">${eur(totalAño)}</div>
+    <div class="suave" style="color:#41604f">Presupuestos enviados · ${db.presupuestos.filter(p=>p.estado==='enviado').length} docs</div>
+    <button class="boton naranja" style="margin-top:12px" onclick="nuevoPresu()">${ico('plus',18)} Nuevo presupuesto</button>
+  </div>
+  <div class="grid-inicio">
+  <div class="tarjeta">
+    <div class="fila-entre"><h3>Borradores</h3><span class="chip">${pend.length}</span></div>
+    ${pend.length?pend.slice(0,3).map(p=>`
+      <div class="partida"><div class="fila-entre"><div><div class="nombre">${esc(p.numero)} · ${esc(p.clienteNombre||'Sin cliente')}</div>
+      <div class="med">${totales(p).total.toLocaleString('es-ES',{minimumFractionDigits:2})} €</div></div>
+      <button class="boton mini sec" onclick="abrirPresu('${p.id}')">Abrir</button></div></div>`).join(''):'<div class="suave">Sin borradores pendientes</div>'}
+  </div>
+  <div class="tarjeta">
+    <h3>Últimos presupuestos</h3>
+    ${db.presupuestos.slice(-4).reverse().map(p=>{const t=totales(p);return`
+      <div class="partida"><div class="fila-entre"><div><div class="nombre">${esc(p.numero)} <span class="badge ${p.estado}">${p.estado}</span></div>
+      <div class="med">${esc(p.clienteNombre||'')} · ${p.fecha}</div></div><div class="imp">${eur(t.total)}</div></div></div>`}).join('')||'<div class="suave">Aún no hay presupuestos</div>'}
+  </div>
+  <div class="tarjeta full">
+    <h3>Cómo funciona</h3>
+    <div class="suave" style="line-height:1.7">1 · Elige partidas del catálogo<br>2 · Introduce mediciones desde la obra<br>3 · La app calcula materiales y horas<br>4 · Genera el PDF y envíalo</div>
+  </div>
+  </div>`;
+}
+
+function vPresupuestos(){
+  return `<div class="fila-entre" style="margin-bottom:12px"><h2 style="font-size:18px">Presupuestos</h2>
+    <button class="boton mini" onclick="nuevoPresu()">${ico('plus',15)} Nuevo</button></div>
+    ${db.presupuestos.slice().reverse().map(p=>{const t=totales(p);return`
+    <div class="lista-item" onclick="abrirPresu('${p.id}')">
+      <div><div class="nombre">${esc(p.numero)} <span class="badge ${p.estado}">${p.estado}</span></div>
+      <div class="det">${esc(p.clienteNombre||'Sin cliente')} · ${p.fecha}</div></div>
+      <div class="imp">${eur(t.total)}</div>
+    </div>`}).join('')||`<div class="vacio"><div class="ico">${ico('presu',36)}</div>Sin presupuestos todavía.<br>Pulsa «Nuevo» para empezar.</div>`}`;
+}
+
+function vCatalogo(){
+  const caps={};
+  db.catalogo.forEach(x=>{(caps[x.cap]=caps[x.cap]||[]).push(x)});
+  return `<div class="fila-entre" style="margin-bottom:12px"><h2 style="font-size:18px">Catálogo</h2>
+    <button class="boton mini" onclick="modalPartida()">${ico('plus',15)} Partida</button></div>
+    ${Object.entries(caps).map(([cap,items])=>`
+    <div class="bloque-cap"><div class="cap-cab"><span class="tit">${esc(cap)} · ${items.length}</span></div>
+      ${items.map(x=>`
+      <div class="lista-item" onclick="modalPartida('${x.id}')">
+        <div><div class="nombre">${esc(x.nombre)}</div>
+        <div class="det">${x.ud} · ${num(x.precio)} €/${x.ud} · ${num(x.horas)} h/${x.ud} · receta ${x.receta.length} mat.</div></div>
+        <div style="color:var(--texto-suave)">›</div>
+      </div>`).join('')}
+    </div>`).join('')||`<div class="vacio"><div class="ico">${ico('catalogo',36)}</div>Catálogo vacío</div>`}`;
+}
+
+function vClientes(){
+  return `<div class="fila-entre" style="margin-bottom:12px"><h2 style="font-size:18px">Clientes</h2>
+    <button class="boton mini" onclick="modalCliente()">${ico('plus',15)} Cliente</button></div>
+    ${db.clientes.map(c=>`
+    <div class="lista-item" onclick="modalCliente('${c.id}')">
+      <div><div class="nombre">${esc(c.nombre)}</div>
+      <div class="det">${esc(c.poblacion||'')}</div></div>
+      <div style="color:var(--texto-suave)">›</div>
+    </div>`).join('')||`<div class="vacio"><div class="ico">${ico('clientes',36)}</div>Sin clientes</div>`}`;
+}
+
+function vAjustes(){
+  const e=db.empresa;
+  return `<h2 style="font-size:18px;margin-bottom:4px">Ajustes</h2>
+  <div class="suave" style="margin-bottom:6px">Datos que aparecen en el PDF · IVA por defecto: ${e.iva}%</div>
+  <label>Empresa</label><input id="e-nombre" value="${esc(e.nombre)}">
+  <label>Dirección</label><input id="e-dir" value="${esc(e.direccion)}">
+  <label>Población</label><input id="e-pob" value="${esc(e.poblacion)}">
+  <label>CIF</label><input id="e-cif" value="${esc(e.cif)}">
+  <label>Teléfono</label><input id="e-tel" value="${esc(e.tel)}">
+  <label>Email</label><input id="e-mail" value="${esc(e.email)}">
+  <label>IBAN</label><input id="e-iban" value="${esc(e.iban)}">
+  <label>Beneficiario</label><input id="e-ben" value="${esc(e.beneficiario)}">
+  <label>IVA por defecto (%)</label><input id="e-iva" type="number" value="${e.iva}">
+  <div style="height:10px"></div>
+  <button class="boton" onclick="guardarEmpresa()">Guardar ajustes</button>
+  <div style="height:14px"></div>
+  <div class="tarjeta"><h3>Plantilla de observaciones</h3><div class="suave" style="margin-bottom:8px">Se incluirá en todos los presupuestos (editable en cada uno).</div>
+  <button class="boton sec" onclick="modalObs()">Editar plantilla</button></div>
+  <div style="height:8px"></div>
+  <button class="boton rojo" onclick="if(confirm('¿Restablecer la demo con sus datos originales? Se perderán presupuestos, clientes y cambios del catálogo.'))reset()">Restablecer demo</button>`;
+}
+
+/* ---- Editor de presupuesto ---- */
+function nuevoPresu(){
+  const n='E'+(db.seq++);guardar();
+  const hoy=new Date().toLocaleDateString('es-ES');
+  const p={id:'p'+Date.now(),numero:n,fecha:hoy,estado:'borrador',clienteId:null,clienteNombre:'',obra:'',
+    referencia:'',iva:db.empresa.iva,obs:db.obsPlantilla,capitulos:[]};
+  db.presupuestos.push(p);guardar();
+  presuAbierto=p.id;vista='editar';render();
+}
+function abrirPresu(id){presuAbierto=id;vista='editar';render()}
+function pActual(){return db.presupuestos.find(p=>p.id===presuAbierto)}
+
+function vEditor(){
+  const p=pActual();if(!p){vista='presupuestos';return vPresupuestos()}
+  const t=totales(p),m=materiales(p);
+  return `
+  <div class="fila-entre" style="margin-bottom:6px">
+    <button class="boton mini sec" onclick="nav('presupuestos')">${ico('back',15)} Volver</button>
+    <button class="boton mini" onclick="vistaPDF('${p.id}')">${ico('print',15)} Ver PDF</button>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+    <span class="chip">${esc(p.numero)}</span><span class="badge ${p.estado}">${p.estado}</span>
+  </div>
+  <div class="editor-grid"><div class="editor-col">
+  <div class="tarjeta">
+    <label>Cliente</label>
+    <select onchange="setCliente('${p.id}',this.value)">
+      <option value="">— Seleccionar —</option>
+      ${db.clientes.map(c=>`<option value="${c.id}" ${p.clienteId===c.id?'selected':''}>${esc(c.nombre)}</option>`).join('')}
+    </select>
+    <button class="boton mini sec" style="margin-top:8px" onclick="modalCliente()">${ico('plus',14)} Nuevo cliente</button>
+    <label>Obra / descripción</label><input value="${esc(p.obra)}" onchange="setObra('${p.id}',this.value)" placeholder="Ej: Reforma edificio residencial">
+    <label>Referencia / ubicación</label><input value="${esc(p.referencia)}" onchange="setRef('${p.id}',this.value)">
+    <label>IVA (%)</label><input type="number" value="${p.iva}" onchange="setIva('${p.id}',this.value)">
+  </div>
+
+  <h2 style="font-size:16px;margin:14px 0 10px">Capítulos y partidas</h2>
+  <button class="boton naranja" onclick="modalAddPartida('${p.id}')">${ico('plus',17)} Añadir partida del catálogo</button>
+
+  ${p.capitulos.map((c,ci)=>`
+  <div class="bloque-cap" style="margin-top:14px">
+    <div class="cap-cab"><span class="tit">${ci+1} · ${esc(c.nombre)}</span>
+      <span style="font-weight:700">${eur(c.importe)}</span></div>
+    ${c.items.map((it,ii)=>`
+    <div class="partida">
+      <div class="fila-entre"><div style="flex:1">
+        <div class="nombre">${esc(it.nombre)}</div>
+        <div class="med">${num(it.precio)} €/${esc(it.ud)} × ${num(it.cantidad)} ${esc(it.ud)}</div>
+        ${it.catId?'<button class="boton mini sec" style="margin-top:6px" onclick="modalMedicion(\''+p.id+'\','+ci+','+ii+')">'+ico('edit',13)+' Medición</button>':''}
+      </div>
+      <div style="text-align:right"><div class="imp">${eur(it.importe)}</div>
+      <button class="boton mini rojo" style="margin-top:4px" onclick="quitarItem('${p.id}',${ci},${ii})">Quitar</button></div>
+    </div></div>`).join('')||'<div class="suave" style="padding:8px 4px">Sin partidas. Usa «Añadir partida del catálogo».</div>'}
+    <button class="boton mini rojo" style="margin-top:8px" onclick="quitarCap('${p.id}',${ci})">Eliminar capítulo</button>
+  </div>`).join('')}
+  </div>
+  <div class="editor-col editor-fija">
+
+  <div class="totales">
+    <div class="fila"><span>Base imponible</span><b>${eur(t.base)}</b></div>
+    <div class="fila"><span>IVA ${p.iva}%</span><b>${eur(t.iva)}</b></div>
+    <div class="fila total"><span>TOTAL</span><span>${eur(t.total)}</span></div>
+  </div>
+
+  <div class="resumen-material">
+    <h4>${ico('mat',15)} Materiales estimados</h4>
+    ${Object.entries(m.mat).map(([k,v])=>`<div class="fila"><span>${esc(k)}</span><b>${num(Math.round(v*100)/100)}</b></div>`).join('')||'<div class="suave">Añade partidas del catálogo para ver los materiales.</div>'}
+    <div style="border-top:1px dashed #bfd8c9;margin-top:8px;padding-top:8px"></div>
+    <div class="fila"><span>${ico('reloj',14)} Horas estimadas</span><b>${num(Math.round(m.horas*10)/10)} h</b></div>
+    <div class="fila"><span>${ico('equipo',14)} Jornadas aprox. (equipo 3)</span><b>${m.dias} días</b></div>
+  </div>
+
+  <div class="tarjeta" style="margin-top:14px"><h3>Observaciones</h3>
+    <div class="suave" style="white-space:pre-line;max-height:70px;overflow:hidden;position:relative">${esc(p.obs.slice(0,180))}…</div>
+    <button class="boton sec" style="margin-top:8px" onclick="modalObsPresu('${p.id}')">Editar observaciones</button>
+  </div>
+
+  <div class="acciones-fila">
+    <button class="boton naranja" onclick="vistaPDF('${p.id}')">${ico('print',17)} Generar PDF</button>
+  </div>
+  <div class="acciones-fila">
+    <button class="boton sec" onclick="duplicar('${p.id}')">${ico('copy',15)} Duplicar</button>
+    <button class="boton sec" onclick="marcarEnviado('${p.id}')">${p.estado==='borrador'?ico('check',15)+' Marcar enviado':ico('back',15)+' Pasar a borrador'}</button>
+    <button class="boton rojo" onclick="borrarPresu('${p.id}')" title="Eliminar">${ico('trash',16)}</button>
+  </div>
+  </div>
+  </div>`;
+}
+
+/* =========================================================
+   MODALES
+   ========================================================= */
+function modal(html){document.getElementById('modal-cont').innerHTML=html;document.getElementById('modal-fondo').style.display='flex'}
+function cerrarModal(){document.getElementById('modal-fondo').style.display='none'}
+
+function modalCliente(id){
+  const c=id?db.clientes.find(x=>x.id===id):{};
+  modal(`<div class="fila-entre"><h2>${id?'Editar cliente':'Nuevo cliente'}</h2><button class="modal-cerrar" onclick="cerrarModal()">×</button></div>
+  <label>Nombre / razón social</label><input id="c-nombre" value="${esc(c.nombre||'')}">
+  <label>CIF / NIF</label><input id="c-cif" value="${esc(c.cif||'')}">
+  <label>Dirección</label><input id="c-dir" value="${esc(c.direccion||'')}">
+  <label>Población</label><input id="c-pob" value="${esc(c.poblacion||'')}">
+  <label>Teléfono</label><input id="c-tel" value="${esc(c.tel||'')}">
+  <label>Email</label><input id="c-mail" value="${esc(c.email||'')}">
+  <div style="height:12px"></div>
+  <button class="boton" onclick="guardarCliente('${id||''}')">Guardar</button>
+  ${id?'<div style="height:8px"></div><button class="boton rojo" onclick="borrarCliente(\''+id+'\')">Eliminar</button>':''}`);
+}
+function guardarCliente(id){
+  const d={nombre:v('c-nombre'),cif:v('c-cif'),direccion:v('c-dir'),poblacion:v('c-pob'),tel:v('c-tel'),email:v('c-mail')};
+  if(!d.nombre){alert('Falta el nombre');return}
+  if(id){Object.assign(db.clientes.find(x=>x.id===id),d)}
+  else db.clientes.push({id:'c'+Date.now(),...d});
+  guardar();cerrarModal();render();
+}
+function borrarCliente(id){if(!confirm('¿Eliminar cliente?'))return;db.clientes=db.clientes.filter(x=>x.id!==id);guardar();cerrarModal();render()}
+
+function modalPartida(id){
+  const x=id?db.catalogo.find(y=>y.id===id):{cap:db.capitulos[0],ud:'m²',receta:[]};
+  modal(`<div class="fila-entre"><h2>${id?'Editar partida':'Nueva partida'}</h2><button class="modal-cerrar" onclick="cerrarModal()">×</button></div>
+  <label>Descripción</label><textarea id="x-nombre" rows="2">${esc(x.nombre||'')}</textarea>
+  <label>Capítulo</label>
+  <select id="x-cap">${db.capitulos.map(c=>`<option ${x.cap===c?'selected':''}>${esc(c)}</option>`).join('')}</select>
+  <label>Unidad</label>
+  <select id="x-ud">${['m²','ml','ud'].map(u=>`<option ${x.ud===u?'selected':''}>${u}</option>`).join('')}</select>
+  <label>Precio de venta (€/${x.ud||'ud'})</label><input id="x-precio" type="number" step="0.01" value="${x.precio??''}">
+  <label>Horas por unidad</label><input id="x-horas" type="number" step="0.05" value="${x.horas??''}">
+  <div style="height:12px"></div><h3 style="font-size:14px">Receta de materiales (por unidad)</h3>
+  <div id="receta">${(x.receta||[]).map(([m,q])=>filaReceta(m,q)).join('')}</div>
+  <button class="boton mini sec" style="margin-top:8px" onclick="addFilaReceta()">${ico('plus',14)} Material</button>
+  <div style="height:14px"></div>
+  <button class="boton" onclick="guardarPartida('${id||''}')">Guardar partida</button>
+  ${id?'<div style="height:8px"></div><button class="boton rojo" onclick="borrarPartida(\''+id+'\')">Eliminar</button>':''}`);
+}
+function filaReceta(m,q){return `<div class="grupo-mat" style="display:flex;gap:6px;margin-top:6px">
+  <input class="r-mat" placeholder="Material" value="${esc(m||'')}" style="flex:2">
+  <input class="r-can" type="number" step="0.01" placeholder="Cant." value="${q??''}" style="flex:1"></div>`}
+function addFilaReceta(){document.getElementById('receta').insertAdjacentHTML('beforeend',filaReceta('',''))}
+function guardarPartida(id){
+  const receta=[...document.querySelectorAll('#receta .grupo-mat')].map(g=>[g.querySelector('.r-mat').value.trim(),parseFloat(g.querySelector('.r-can').value)||0]).filter(r=>r[0]);
+  const d={nombre:v('x-nombre'),cap:v('x-cap'),ud:v('x-ud'),precio:parseFloat(v('x-precio'))||0,horas:parseFloat(v('x-horas'))||0,receta};
+  if(!d.nombre){alert('Falta la descripción');return}
+  if(id){Object.assign(db.catalogo.find(x=>x.id===id),d)}
+  else db.catalogo.push({id:'x'+Date.now(),...d});
+  guardar();cerrarModal();render();
+}
+function borrarPartida(id){if(!confirm('¿Eliminar partida del catálogo?'))return;db.catalogo=db.catalogo.filter(x=>x.id!==id);guardar();cerrarModal();render()}
+
+/* --- Añadir partida al presupuesto: lista catálogo -> medición --- */
+function modalAddPartida(pid){
+  const caps={};db.catalogo.forEach(x=>{(caps[x.cap]=caps[x.cap]||[]).push(x)});
+  modal(`<div class="fila-entre"><h2>Añadir partida</h2><button class="modal-cerrar" onclick="cerrarModal()">×</button></div>
+  <input class="buscador" id="b-catalogo" placeholder="Buscar partida…" oninput="filtraCatalogo(this.value)">
+  <div id="lista-add">${Object.entries(caps).map(([cap,items])=>`
+    <div class="bloque-cap" data-cap="${esc(cap.toLowerCase())}" data-nombres="${esc(items.map(i=>i.nombre.toLowerCase()).join('|'))}">
+    <div class="cap-cab"><span class="tit">${esc(cap)}</span></div>
+    ${items.map(x=>`<div class="partida" onclick="modalMedicionNueva('${pid}','${x.id}')">
+      <div class="fila-entre"><div style="flex:1"><div class="nombre">${esc(x.nombre)}</div>
+      <div class="med">${x.ud} · ${num(x.precio)} €/${x.ud}</div></div>
+      <span class="chip">${ico('plus',13)}</span></div></div>`).join('')}
+    </div>`).join('')}</div>`);
+}
+function filtraCatalogo(q){
+  q=q.toLowerCase();document.querySelectorAll('#lista-add .bloque-cap').forEach(b=>{
+    const ok=b.dataset.cap.includes(q)||b.dataset.nombres.includes(q);b.style.display=ok?'':'none'})}
+function modalMedicionNueva(pid,cid){
+  const x=db.catalogo.find(y=>y.id===cid);
+  let cap=pActual().capitulos.find(c=>c.nombre===x.cap);
+  if(!cap){cap={nombre:x.cap,items:[]};pActual().capitulos.push(cap)}
+  cap.items.push({catId:cid,nombre:x.nombre,ud:x.ud,precio:x.precio,cantidad:0});
+  guardar();cerrarModal();render();
+  const ci=pActual().capitulos.indexOf(cap),ii=cap.items.length-1;
+  modalMedicion(pid,ci,ii);
+}
+function modalMedicion(pid,ci,ii){
+  const it=pActual().capitulos[ci].items[ii];
+  modal(`<div class="fila-entre"><h2>Medición</h2><button class="modal-cerrar" onclick="cerrarModal()">×</button></div>
+  <div class="suave" style="margin-bottom:6px">${esc(it.nombre)}</div>
+  <label>Cantidad (${esc(it.ud)})</label><input id="m-can" type="number" step="0.01" value="${it.cantidad}">
+  <label>Precio (€/${esc(it.ud)}) — se puede ajustar en esta obra</label><input id="m-pre" type="number" step="0.01" value="${it.precio}">
+  <div class="zona-precio"><div class="fila"><span class="suave">Importe</span><span class="imp" id="m-imp">${eur(it.cantidad*it.precio)}</span></div></div>
+  <div style="height:12px"></div><button class="boton" onclick="guardarMedicion('${pid}',${ci},${ii})">Guardar medición</button>`);
+  document.getElementById('m-can').oninput=document.getElementById('m-pre').oninput=()=>{
+    const c=parseFloat(document.getElementById('m-can').value)||0,p=parseFloat(document.getElementById('m-pre').value)||0;
+    document.getElementById('m-imp').textContent=eur(c*p)};
+}
+function guardarMedicion(pid,ci,ii){
+  const it=pActual().capitulos[ci].items[ii];
+  it.cantidad=parseFloat(v('m-can'))||0;it.precio=parseFloat(v('m-pre'))||0;
+  guardar();cerrarModal();render();
+}
+function quitarItem(pid,ci,ii){pActual().capitulos[ci].items.splice(ii,1);guardar();render()}
+function quitarCap(pid,ci){if(!confirm('¿Eliminar capítulo y sus partidas?'))return;pActual().capitulos.splice(ci,1);guardar();render()}
+
+function setCliente(pid,val){const p=pActual();p.clienteId=val||null;p.clienteNombre=(db.clientes.find(c=>c.id===val)||{}).nombre||'';guardar();render()}
+function setObra(pid,val){pActual().obra=val;guardar()}
+function setRef(pid,val){pActual().referencia=val;guardar()}
+function setIva(pid,val){pActual().iva=parseFloat(val)||0;guardar();render()}
+
+function duplicar(id){
+  const p=pActual();const n='E'+(db.seq++);guardar();
+  const copia=JSON.parse(JSON.stringify(p));
+  copia.id='p'+Date.now();copia.numero=n;copia.fecha=new Date().toLocaleDateString('es-ES');copia.estado='borrador';
+  db.presupuestos.push(copia);guardar();presuAbierto=copia.id;render();
+}
+function marcarEnviado(id){const p=pActual();p.estado=p.estado==='borrador'?'enviado':'borrador';guardar();render()}
+function borrarPresu(id){if(!confirm('¿Eliminar presupuesto?'))return;db.presupuestos=db.presupuestos.filter(p=>p.id!==id);presuAbierto=null;vista='presupuestos';render()}
+
+function modalObs(){modal(`<div class="fila-entre"><h2>Plantilla de observaciones</h2><button class="modal-cerrar" onclick="cerrarModal()">×</button></div>
+  <textarea id="o-pl" rows="12">${esc(db.obsPlantilla)}</textarea>
+  <div style="height:10px"></div><button class="boton" onclick="db.obsPlantilla=v('o-pl');guardar();cerrarModal()">Guardar plantilla</button>`)}
+function modalObsPresu(pid){modal(`<div class="fila-entre"><h2>Observaciones · ${esc(pActual().numero)}</h2><button class="modal-cerrar" onclick="cerrarModal()">×</button></div>
+  <textarea id="o-pr" rows="12">${esc(pActual().obs)}</textarea>
+  <div style="height:10px"></div><button class="boton" onclick="pActual().obs=v('o-pr');guardar();cerrarModal();render()">Guardar</button>`)}
+
+function guardarEmpresa(){
+  Object.assign(db.empresa,{nombre:v('e-nombre'),direccion:v('e-dir'),poblacion:v('e-pob'),cif:v('e-cif'),tel:v('e-tel'),email:v('e-mail'),iban:v('e-iban'),beneficiario:v('e-ben'),iva:parseFloat(v('e-iva'))||0});
+  guardar();render();alert('Ajustes guardados');
+}
+function reset(){localStorage.removeItem(K);cargar();render()}
+
+const v=id=>{const e=document.getElementById(id);return e?e.value:''};
+
+/* =========================================================
+   PDF
+   ========================================================= */
+function vistaPDF(id){
+  const p=db.presupuestos.find(x=>x.id===id);if(!p)return;
+  const t=totales(p),e=db.empresa;
+  const c=db.clientes.find(x=>x.id===p.clienteId)||{};
+  const casa='<svg class="casa" width="42" height="37" viewBox="0 0 44 38"><path d="M22 1 L43 19 H35.5 V37 H26 V24 H18 V37 H8.5 V19 H1 Z" fill="#ADD8C7"/></svg>';
+  const nCaps=p.capitulos.length;
+  const filas=p.capitulos.map((cap,ci)=>{
+    let h=`<tr class="capitulo"><td colspan="4">${esc(cap.nombre)}</td><td></td><td class="num">${eur(cap.importe)}</td></tr>`;
+    cap.items.forEach((it,ii)=>{
+      const ult=(ci===nCaps-1&&ii===cap.items.length-1)?' class="ultimo"':'';
+      h+=`<tr${ult}><td style="width:40%">${esc(it.nombre)}</td>
+      <td class="num">${num(it.precio)}€</td><td class="num">${num(it.cantidad)}</td>
+      <td class="num">${eur(it.importe)}</td><td style="text-align:center">${p.iva}%</td>
+      <td class="num">${eur(it.importe)}</td></tr>`});
+    return h}).join('');
+  document.getElementById('vista-pdf').innerHTML=`
+  <div class="pagina-pdf">
+    <div class="pdf-cab">
+      <div>
+        <div class="pdf-titulo-doc">Presupuesto</div>
+        <div class="pdf-numfecha"><table>
+          <tr><td>Número #</td><td>${esc(p.numero)}</td></tr>
+          <tr><td>Fecha</td><td>${esc(p.fecha)}</td></tr>
+        </table></div>
+      </div>
+      <div class="pdf-marca">${casa}
+        <div class="nombre"><div class="l1">METRO<br>CUADRADO</div><div class="l2">CONSTRUCCIÓN<br>Y&nbsp;REFORMAS</div></div>
+      </div>
+    </div>
+    <div class="pdf-doscol">
+      <div><b>${esc(e.nombre)}</b><br>${esc(e.direccion)}<br>${esc(e.poblacion)}<br>${esc(e.cif)}<br>${esc(e.tel)}<br>${esc(e.email)}</div>
+      <div><b>Cliente</b><br>${esc(c.nombre||p.clienteNombre||'—')}${c.cif?'<br>'+esc(c.cif):''}${c.direccion?'<br>'+esc(c.direccion):''}${c.poblacion?'<br>'+esc(c.poblacion):''}${c.tel?'<br>'+esc(c.tel):''}</div>
+    </div>
+    <table class="pdf-tabla">
+      <tr><th>Concepto</th><th class="num">Precio</th><th class="num">Unidades</th><th class="num">Subtotal</th><th style="text-align:center">IVA</th><th class="num">Total</th></tr>
+      ${filas}
+    </table>
+    <div class="pdf-tot"><table>
+      <tr><td class="et">BASE IMPONIBLE</td><td class="vl">${eur(t.base)}</td></tr>
+      <tr><td class="et">IVA ${p.iva}%</td><td class="vl">${eur(t.iva)}</td></tr>
+      <tr class="final"><td>TOTAL</td><td class="vl">${eur(t.total)}</td></tr>
+    </table></div>
+    <div class="pdf-obs"><h4>Observaciones</h4>${esc(p.obs).replace(/\n/g,'<br>')}</div>
+    <div class="pdf-pago"><h4>Condiciones de pago</h4>Transferencia Bancaria<br>IBAN: ${esc(e.iban)}<br>BENEFICIARIO: ${esc(e.beneficiario)}</div>
+    <div class="pdf-pie"><span>${esc(p.numero)} - ${eur(t.total)}</span><span>Pág. 1 de 1</span></div>
+  </div>`;
+  /* botón flotante volver + imprimir */
+  const barra=document.createElement('div');
+  barra.style.cssText='position:fixed;top:10px;right:10px;z-index:999;display:flex;gap:8px';
+  barra.innerHTML='<button onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #ccc;border-radius:8px;padding:8px 14px;font-weight:700">'+ico('back',15)+' Volver</button>'+
+                   '<button onclick="window.print()" style="display:inline-flex;align-items:center;gap:7px;background:#add8c7;color:#253832;border-radius:8px;padding:8px 14px;font-weight:700">'+ico('print',15)+' Imprimir / Guardar PDF</button>';
+  document.body.appendChild(barra);
+  window.__barra=barra;
+  /* en pantalla mostramos una vista previa */
+  document.getElementById('vista-pdf').style.display='block';
+  document.getElementById('app').style.display='none';
+  ajustarZoomPDF();
+  window.addEventListener('resize',ajustarZoomPDF);
+  window.addEventListener('afterprint',()=>{location.reload()});
+}
+/* Escala la vista previa del PDF al ancho disponible (pantalla); al imprimir queda A4 real */
+function ajustarZoomPDF(){
+  const pg=document.querySelector('.pagina-pdf');
+  if(!pg)return;
+  const disp=Math.min(window.innerWidth,window.document.documentElement.clientWidth)-16;
+  const ANCHO=794; /* 210mm a 96dpi */
+  const z=Math.min(1,disp/ANCHO);
+  if(z<1){pg.style.zoom=z}else{pg.style.zoom=''}
+}
+
+/* ===== Arranque ===== */
+cargar();
+pintaIconos();
+render();
+</script>
+</body>
+</html>
